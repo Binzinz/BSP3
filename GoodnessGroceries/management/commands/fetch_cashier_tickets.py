@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand
 from GoodnessGroceries.models import CashierTicketProducts, Users
 import os
 import csv
+from datetime import datetime
 from push_notifications.models import APNSDevice, GCMDevice
 import requests
 
@@ -11,17 +12,21 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         # TODO: configuration of the CSV file
-        participant_column = 0
-        timestamp_column = 1
-        product_column = 2
-        file_url = 'https://drive.google.com/uc?export=download&id=1q5eyMVddf5o6KcFfxmQSsycOs2GfIbnl'
-
+        date_column = 0
+        hour_column = 1
+        participant_column = 2
+        product_column = 3
+        desc_column = 4
+        quantity_column = 5
+        price_column = 6
+        store_column = 7
+        file_url = 'https://dropit.uni.lu/invitations?share=ce550b5b315efd73b171&dl=1'
         with requests.Session() as s:
             download = s.get(file_url)
 
             decoded_content = download.content.decode('utf-8')
 
-            cr = csv.reader(decoded_content.splitlines(), delimiter=',')
+            cr = csv.reader(decoded_content.splitlines(), delimiter=';')
             header = next(cr)
             if header != None:
                 for row in cr:
@@ -30,8 +35,8 @@ class Command(BaseCommand):
                             'participant_id').get(participant_id=row[participant_column])
                     except Users.DoesNotExist:
                         continue
-
-                    timestamp = row[timestamp_column]
+                    convert_date = row[date_column][-4] + row[date_column][2 2] + row[date_column][0 2]
+                    timestamp = datetime.timestamp(convert_date +' '+row[hour_column])
                     product_ean = row[product_column]
 
                     ticket = CashierTicketProducts.objects.create(
